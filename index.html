@@ -127,6 +127,108 @@
               <h4 class="mb-2 text-sm font-semibold uppercase tracking-wider text-slate-300">Live Preview</h4>
               <div id="live-preview" class="preview-root"></div>
             </div>
+
+            <div class="github-panel mt-5" id="github-export-panel">
+              <div class="flex items-center justify-between gap-3">
+                <h4 class="text-sm font-semibold uppercase tracking-wider text-slate-300">GitHub Export (v0.3)</h4>
+                <span id="github-status" class="github-status disconnected">Not connected</span>
+              </div>
+              <p class="mt-2 text-xs text-amber-300">⚠️ This stores a GitHub token in your browser. Use with caution.</p>
+
+              <div class="field-grid mt-3">
+                <label class="field">
+                  <span>GitHub OAuth Client ID</span>
+                  <input id="github-client-id" type="text" placeholder="Iv1.xxxxxxxxxxxxxxxx" />
+                </label>
+                <label class="field remember-row">
+                  <span>Token persistence</span>
+                  <label class="inline-flex items-center gap-2 text-sm text-slate-300 pt-2">
+                    <input id="github-remember" type="checkbox" />
+                    Remember me (default off)
+                  </label>
+                </label>
+              </div>
+
+              <div class="mt-3 flex flex-wrap gap-2">
+                <button id="btn-github-connect" class="btn" type="button">Connect to GitHub</button>
+                <button id="btn-github-disconnect" class="btn" type="button">Disconnect</button>
+                <button id="btn-github-refresh" class="btn" type="button">Refresh Repos</button>
+                <button id="btn-github-retry" class="btn" type="button">Retry queued exports</button>
+              </div>
+
+              <div class="field-grid mt-4">
+                <label class="field full">
+                  <span>Search repos</span>
+                  <input id="github-repo-search" type="text" placeholder="Search by name..." />
+                </label>
+                <label class="field">
+                  <span>Repository</span>
+                  <select id="github-repo-select">
+                    <option value="">Select a repository</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>Create new repo</span>
+                  <div class="flex gap-2">
+                    <input id="github-new-repo" type="text" placeholder="agent-prompts-test" />
+                    <button id="btn-github-create-repo" class="btn" type="button">Create</button>
+                  </div>
+                </label>
+                <label class="field">
+                  <span>Source branch</span>
+                  <select id="github-branch-select">
+                    <option value="">Default branch</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>New branch (optional)</span>
+                  <input id="github-new-branch" type="text" placeholder="apb/export-2026-02-11" />
+                </label>
+                <label class="field full">
+                  <span>Commit message</span>
+                  <input id="github-commit-message" type="text" value="chore: export agent prompt pack" />
+                </label>
+                <label class="field full">
+                  <span>Pull Request</span>
+                  <label class="inline-flex items-center gap-2 text-sm text-slate-300">
+                    <input id="github-open-pr" type="checkbox" checked />
+                    Open PR after export
+                  </label>
+                </label>
+              </div>
+            </div>
+
+            <div class="mt-6 rounded-xl border border-slate-700 bg-slate-900/40 p-4">
+              <div class="flex flex-wrap items-center gap-2">
+                <button id="compare-toggle" class="btn" type="button">Enable Compare Mode</button>
+                <input id="version-name" class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm" placeholder="v1 initial" />
+                <button id="btn-save-version" class="btn" type="button">Save Version</button>
+                <button id="btn-export-history" class="btn" type="button">Export Version History</button>
+                <button id="btn-reset-prev" class="btn" type="button">Reset to Previous</button>
+              </div>
+
+              <div id="compare-panel" class="mt-4 hidden space-y-3">
+                <div class="grid gap-3 md:grid-cols-2">
+                  <label class="field"><span>Left (Original)</span><select id="compare-left"></select></label>
+                  <label class="field"><span>Right (Modified)</span><select id="compare-right"></select></label>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <button id="btn-swap" class="btn" type="button">Swap Left/Right</button>
+                  <button id="btn-compare-template" class="btn" type="button">Compare vs Template</button>
+                  <button id="btn-compare-imported" class="btn" type="button">Compare vs Imported JSON</button>
+                  <label class="inline-flex items-center gap-2 text-sm"><input id="chk-ignore-whitespace" type="checkbox" /> Ignore whitespace</label>
+                  <label class="inline-flex items-center gap-2 text-sm"><input id="chk-only-changed" type="checkbox" /> Show changed files only</label>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <button id="btn-copy-right-left" class="btn" type="button">Copy all Right → Left</button>
+                  <button id="btn-merge-selected" class="btn" type="button">Merge Selected Changes</button>
+                  <button id="btn-export-patch" class="btn" type="button">Export Patch</button>
+                  <button id="btn-export-changelog" class="btn" type="button">Export Changelog (.md)</button>
+                </div>
+                <div id="diff-container" class="diff-root"></div>
+                <pre id="changelog-output" class="rounded-xl border border-slate-800 bg-slate-950 p-3 text-xs text-slate-200"></pre>
+              </div>
+            </div>
           </div>
         </form>
 
@@ -134,10 +236,22 @@
           <button id="btn-prev" class="btn" type="button">Previous</button>
           <button id="btn-next" class="btn btn-primary" type="button">Next</button>
           <button id="btn-generate" class="btn" type="button">Generate Config</button>
-          <button id="btn-export" class="btn" type="button">Export ZIP</button>
+          <button id="btn-export" class="btn" type="button">Download ZIP</button>
+          <button id="btn-export-github" class="btn btn-primary" type="button">Export to GitHub</button>
         </div>
 
         <pre id="output" class="mt-6 min-h-56 overflow-auto rounded-xl border border-slate-800 bg-slate-950 p-4 text-xs text-emerald-300"></pre>
+
+        <div id="github-success-modal" class="modal hidden">
+          <div class="modal-content">
+            <h4 class="text-lg font-semibold">GitHub export successful</h4>
+            <p id="github-success-text" class="mt-2 text-sm text-slate-300"></p>
+            <div class="mt-4 flex gap-2">
+              <a id="github-pr-link" class="btn btn-primary hidden" target="_blank" rel="noopener noreferrer">Open Pull Request</a>
+              <button id="github-modal-close" class="btn" type="button">Close</button>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
 
@@ -155,6 +269,8 @@
     <script src="./js/import.js"></script>
     <script src="./js/preview.js"></script>
     <script src="./js/generator.js"></script>
+    <script src="./js/versioning.js"></script>
+    <script src="./js/github.js"></script>
     <script src="./js/exporter.js"></script>
     <script>
       window.AgentPromptBuilder?.boot?.();

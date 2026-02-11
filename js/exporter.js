@@ -220,7 +220,7 @@ ${formData.coordinationRules || '- Manager delegates based on task complexity\n-
       btn.classList.add('opacity-70', 'cursor-not-allowed');
     } else {
       btn.disabled = false;
-      btn.textContent = 'Export ZIP';
+      btn.textContent = 'Download ZIP';
       btn.classList.remove('opacity-70', 'cursor-not-allowed');
     }
   }
@@ -287,6 +287,8 @@ ${formData.coordinationRules || '- Manager delegates based on task complexity\n-
   async function boot() {
     await ns.wizard?.init?.();
     ns.importer?.init?.();
+    await ns.github?.init?.();
+    await ns.versioning?.init?.();
 
     const out = document.getElementById('output');
     const prevBtn = document.getElementById('btn-prev');

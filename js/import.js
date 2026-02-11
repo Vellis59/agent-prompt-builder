@@ -85,6 +85,7 @@ window.AgentPromptBuilder = window.AgentPromptBuilder || {};
 
     ns.wizard?.updateStepControls?.();
     ns.refreshPreview?.();
+    ns.versioning?.setImportedBaseline?.(data);
   }
 
   async function extractJsonFromZip(file) {

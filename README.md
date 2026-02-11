@@ -2,14 +2,15 @@
 
 A static web application for generating OpenClaw agent configurations through a guided wizard.
 
-## Phase 1 Scope
+## v0.3 Scope (Power User)
 
-- Project foundation (HTML/CSS/JS structure)
-- Wizard architecture scaffold
-- Config generation placeholder
-- Export placeholder
-- Local storage helper
-- Starter template registry
+- Guided wizard for agent config generation
+- ZIP export of agent file pack
+- Direct GitHub export (client-side device OAuth)
+- Repo selection + search + create repo
+- Branch-aware commit export via GitHub Contents API
+- Optional pull request creation
+- Retry queue for transient network/rate-limit failures
 
 ## Tech Constraints
 

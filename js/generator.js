@@ -46,7 +46,7 @@ window.AgentPromptBuilder = window.AgentPromptBuilder || {};
 
     const payload = {
       app: 'agent-prompt-builder',
-      version: '0.2.0',
+      version: '0.3.0',
       generatedAt: new Date().toISOString(),
       templateId: formData.templateId || null,
       wizardState,

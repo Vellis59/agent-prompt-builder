@@ -92,6 +92,7 @@ window.AgentPromptBuilder = window.AgentPromptBuilder || {};
     }
 
     ns.storage?.set?.('wizardFormData', state.formData);
+    ns.versioning?.onFormDataChange?.(state.formData);
     return state.formData;
   }
 
