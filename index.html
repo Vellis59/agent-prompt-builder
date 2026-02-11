@@ -6,36 +6,120 @@
     <meta name="description" content="Agent Prompt Builder - Build OpenClaw agent configurations in a guided workflow." />
     <title>Agent Prompt Builder</title>
 
-    <!-- TailwindCSS via CDN (project constraint) -->
     <script src="https://cdn.tailwindcss.com"></script>
-
     <link rel="stylesheet" href="./css/style.css" />
   </head>
   <body class="min-h-screen bg-slate-950 text-slate-100">
     <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur">
-      <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
+      <div class="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4">
         <h1 class="text-xl font-semibold tracking-tight">Agent Prompt Builder</h1>
-        <span class="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">Phase 1 Foundation</span>
+        <span class="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">Phase 2 Templates + Preview</span>
       </div>
     </header>
 
-    <main class="mx-auto grid w-full max-w-6xl gap-6 px-4 py-8 lg:grid-cols-[280px_1fr]">
+    <main class="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 lg:grid-cols-[280px_1fr]">
       <aside class="card p-4">
         <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-300">Wizard Steps</h2>
         <ol id="wizard-steps" class="space-y-2 text-sm text-slate-300"></ol>
       </aside>
 
       <section class="card p-6">
-        <h2 class="text-lg font-semibold">Workspace</h2>
-        <p class="mt-2 text-sm text-slate-300">
-          This boilerplate is ready for implementation of the wizard, template engine, and exports.
-        </p>
+        <h2 class="text-lg font-semibold">Agent Configuration</h2>
+
+        <form id="agent-form" class="mt-5 space-y-5">
+          <div class="wizard-panel" data-step="0">
+            <h3 class="panel-title">Step 1 · Role & Persona</h3>
+            <div class="field-grid">
+              <label class="field">
+                <span>Template</span>
+                <select id="template-select" name="templateId"></select>
+              </label>
+              <label class="field">
+                <span>Agent Name</span>
+                <input type="text" name="name" placeholder="Orchestrator" />
+              </label>
+              <label class="field full">
+                <span>Role</span>
+                <input type="text" name="role" placeholder="You coordinate multiple agents and delegate tasks" />
+              </label>
+            </div>
+          </div>
+
+          <div class="wizard-panel hidden" data-step="1">
+            <h3 class="panel-title">Step 2 · Constraints & Policies</h3>
+            <div class="field-grid">
+              <label class="field full">
+                <span>Soul Prompt</span>
+                <textarea name="soul" rows="4" placeholder="Core behavior and principles..."></textarea>
+              </label>
+              <label class="field full">
+                <span>Identity Prompt</span>
+                <textarea name="identity" rows="4" placeholder="Identity and scope..."></textarea>
+              </label>
+            </div>
+          </div>
+
+          <div class="wizard-panel hidden" data-step="2">
+            <h3 class="panel-title">Step 3 · Tools & Permissions</h3>
+            <div class="field-grid">
+              <label class="field full">
+                <span>Tools (comma separated)</span>
+                <textarea name="tools" rows="3" placeholder="read, write, edit, exec"></textarea>
+              </label>
+              <label class="field">
+                <span>Hierarchy</span>
+                <select name="hierarchy">
+                  <option value="Standalone">Standalone</option>
+                  <option value="Manager">Manager</option>
+                  <option value="Worker">Worker</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="wizard-panel hidden" data-step="3">
+            <h3 class="panel-title">Step 4 · Memory & User Rules</h3>
+            <div class="field-grid">
+              <label class="field">
+                <span>Memory Mode</span>
+                <select name="memory">
+                  <option value="Persistent">Persistent</option>
+                  <option value="Session-only">Session-only</option>
+                  <option value="Stateless">Stateless</option>
+                </select>
+              </label>
+              <label class="field full">
+                <span>Memory Notes</span>
+                <textarea name="memoryNotes" rows="3" placeholder="Retention policy, key constraints..."></textarea>
+              </label>
+              <label class="field full">
+                <span>User Guidelines</span>
+                <textarea name="userGuidelines" rows="4" placeholder="How the agent should interact with users..."></textarea>
+              </label>
+            </div>
+          </div>
+
+          <div class="wizard-panel hidden" data-step="4">
+            <h3 class="panel-title">Step 5 · Review & Generate</h3>
+            <div class="field-grid">
+              <label class="field full">
+                <span>Agents (one per line)</span>
+                <textarea name="agents" rows="4" placeholder="Developer\nResearcher"></textarea>
+              </label>
+            </div>
+
+            <div class="mt-4">
+              <h4 class="mb-2 text-sm font-semibold uppercase tracking-wider text-slate-300">Live Preview</h4>
+              <div id="live-preview" class="preview-root"></div>
+            </div>
+          </div>
+        </form>
 
         <div class="mt-6 flex flex-wrap gap-3">
-          <button id="btn-prev" class="btn">Previous</button>
-          <button id="btn-next" class="btn btn-primary">Next</button>
-          <button id="btn-generate" class="btn">Generate Config</button>
-          <button id="btn-export" class="btn">Export ZIP</button>
+          <button id="btn-prev" class="btn" type="button">Previous</button>
+          <button id="btn-next" class="btn btn-primary" type="button">Next</button>
+          <button id="btn-generate" class="btn" type="button">Generate Config</button>
+          <button id="btn-export" class="btn" type="button">Export ZIP</button>
         </div>
 
         <pre id="output" class="mt-6 min-h-56 overflow-auto rounded-xl border border-slate-800 bg-slate-950 p-4 text-xs text-emerald-300"></pre>
@@ -46,9 +130,13 @@
       Built with HTML/CSS/JS + Tailwind CDN. No backend.
     </footer>
 
+    <!-- JSZip for ZIP export functionality -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
     <script src="./js/templates.js"></script>
     <script src="./js/storage.js"></script>
     <script src="./js/wizard.js"></script>
+    <script src="./js/preview.js"></script>
     <script src="./js/generator.js"></script>
     <script src="./js/exporter.js"></script>
     <script>

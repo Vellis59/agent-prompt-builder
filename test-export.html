@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ZIP Export</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        body { font-family: system-ui; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>ZIP Export Functionality Test</h1>
+    <div id="results"></div>
+    <button onclick="testAll()">Run All Tests</button>
+    <button onclick="testDownload()">Test Download</button>
+
+    <script>
+        function log(message, isError = false) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'test-result ' + (isError ? 'error' : 'success');
+            div.textContent = message;
+            results.appendChild(div);
+        }
+
+        function generateSoul(formData) {
+            return `# Soul.md
+
+## Essence
+${formData.essence || 'To be defined'}
+
+## Tone
+${formData.tone || 'neutral'}
+
+## Mission
+${formData.mission || 'To assist the user effectively and efficiently.'}
+
+## Anti-Missions
+${formData.antiMissions || '- Do not cause harm to users or systems\n- Do not compromise data security\n- Do not bypass established safeguards'}
+`;
+        }
+
+        function generateIdentity(formData) {
+            return `# Identity.md
+
+## Name
+${formData.name || 'Assistant'}
+
+## Role
+${formData.role || 'General Purpose Assistant'}
+
+## Positioning
+${formData.positioning || 'Reliable, helpful, and safety-focused assistant for task completion.'}
+
+## Capabilities
+${formData.capabilities || '- Task execution\n- Information retrieval\n- Analysis and recommendations'}
+`;
+        }
+
+        function generateTools(formData) {
+            return `# Tools.md
+
+## Available Tools
+${formData.tools || 'Standard toolset based on assigned capabilities.'}
+
+## Usage Rules
+${formData.usageRules || '- Use tools only when necessary\n- Prefer simple, auditable commands\n- Always explain tool usage before execution\n- Respect rate limits and quotas'}
+
+## Tool Access Levels
+${formData.toolAccess || 'Read/Write as defined by role and permissions.'}
+
+## Safety Constraints
+${formData.toolSafety || 'All tool usage must comply with safety policies. Validate before execution.'}
+`;
+        }
+
+        function generateMemory(formData) {
+            return `# Memory.md
+
+## Memory Rules
+${formData.memoryRules || '- Remember context within conversation scope\n- Maintain consistency across responses\n- Do not store sensitive data beyond session'}
+
+## Persistence Settings
+${formData.persistence || 'Session-based memory. No long-term persistence unless explicitly authorized.'}
+
+## Context Window
+${formData.contextWindow || 'Use available context efficiently. Prioritize recent and relevant information.'}
+
+## Memory Cleanup
+${formData.memoryCleanup || 'Clear sensitive information when no longer needed.'}
+`;
+        }
+
+        function generateUser(formData) {
+            return `# User.md
+
+## User Context
+${formData.userContext || 'User seeking assistance with various tasks.'}
+
+## Preferences
+${formData.preferences || '- Clear, concise responses\n- Actionable recommendations\n- Proactive identification of issues'}
+
+## Communication Style
+${formData.commStyle || 'Direct, professional, and helpful.'}
+
+## Feedback Handling
+${formData.feedbackHandling || 'Accept and incorporate feedback to improve performance.'}
+`;
+        }
+
+        function generateAgents(formData) {
+            const isManager = formData.hierarchy === 'Manager';
+            
+            if (!isManager) {
+                return `# Agents.md
+
+## Hierarchy
+${formData.hierarchy || 'Independent Agent'}
+
+## Sub-Agents
+None (independent agent configuration).
+`;
+            }
+
+            return `# Agents.md
+
+## Hierarchy
+${formData.hierarchy || 'Manager'}
+
+## Manager
+- Name: ${formData.managerName || formData.name || 'Manager'}
+- Scope: ${formData.managerScope || 'Orchestrates sub-agents for complex tasks'}
+
+## Sub-Agents
+${formData.subAgents || '### Sub-Agent 1\n- Name: Specialist\n- Role: Domain expert\n- Capabilities: Specialized analysis and recommendations\n\n### Sub-Agent 2\n- Name: Executor\n- Role: Task execution\n- Capabilities: Action implementation'}
+
+## Coordination Rules
+${formData.coordinationRules || '- Manager delegates based on task complexity\n- Sub-agents report back to manager\n- Manager consolidates responses for user'}
+`;
+        }
+
+        function generateFilePack(formData) {
+            const data = formData || {};
+
+            return [
+                { filename: 'Soul.md', content: generateSoul(data) },
+                { filename: 'Identity.md', content: generateIdentity(data) },
+                { filename: 'Tools.md', content: generateTools(data) },
+                { filename: 'Memory.md', content: generateMemory(data) },
+                { filename: 'User.md', content: generateUser(data) },
+                { filename: 'Agents.md', content: generateAgents(data) }
+            ];
+        }
+
+        async function createZip(files, agentName = 'agent') {
+            if (typeof JSZip === 'undefined') {
+                throw new Error('JSZip library is not loaded.');
+            }
+
+            const zip = new JSZip();
+            const folderName = agentName.replace(/[^a-zA-Z0-9-_]/g, '-').toLowerCase();
+            const folder = zip.folder(folderName);
+
+            files.forEach(file => {
+                folder.file(file.filename, file.content);
+            });
+
+            return await zip.generateAsync({
+                type: 'blob',
+                compression: 'DEFLATE',
+                compressionOptions: { level: 6 }
+            });
+        }
+
+        function downloadZip(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        async function testAll() {
+            document.getElementById('results').innerHTML = '';
+            log('Starting ZIP Export Tests...');
+
+            // Test 1: JSZip loaded
+            try {
+                if (typeof JSZip === 'undefined') {
+                    throw new Error('JSZip not loaded');
+                }
+                log('✓ JSZip library loaded successfully');
+            } catch (e) {
+                log('✗ JSZip library not loaded: ' + e.message, true);
+                return;
+            }
+
+            // Test 2: Generate file pack
+            try {
+                const testData = {
+                    name: 'TestAgent',
+                    role: 'Test Role',
+                    essence: 'Test essence',
+                    tone: 'professional',
+                    mission: 'Test mission',
+                    antiMissions: 'Test anti-missions',
+                    hierarchy: 'Manager'
+                };
+                const files = generateFilePack(testData);
+                
+                if (!Array.isArray(files) || files.length !== 6) {
+                    throw new Error('Expected 6 files, got ' + files.length);
+                }
+                
+                const expectedFiles = ['Soul.md', 'Identity.md', 'Tools.md', 'Memory.md', 'User.md', 'Agents.md'];
+                for (const expected of expectedFiles) {
+                    if (!files.find(f => f.filename === expected)) {
+                        throw new Error('Missing file: ' + expected);
+                    }
+                }
+                
+                log('✓ File pack generation successful (6 files)');
+                log('  Files: ' + files.map(f => f.filename).join(', '));
+            } catch (e) {
+                log('✗ File pack generation failed: ' + e.message, true);
+                return;
+            }
+
+            // Test 3: Create ZIP
+            try {
+                const testData = { name: 'TestAgent', hierarchy: 'Manager' };
+                const files = generateFilePack(testData);
+                const zipBlob = await createZip(files, 'TestAgent');
+                
+                if (!(zipBlob instanceof Blob)) {
+                    throw new Error('Expected Blob, got ' + typeof zipBlob);
+                }
+                
+                if (zipBlob.size === 0) {
+                    throw new Error('ZIP blob is empty');
+                }
+                
+                log('✓ ZIP creation successful (size: ' + zipBlob.size + ' bytes)');
+            } catch (e) {
+                log('✗ ZIP creation failed: ' + e.message, true);
+                return;
+            }
+
+            // Test 4: Validate file content
+            try {
+                const testData = { 
+                    name: 'TestAgent',
+                    role: 'Test Role',
+                    essence: 'Test essence content',
+                    hierarchy: 'Manager'
+                };
+                const files = generateFilePack(testData);
+                
+                const soulFile = files.find(f => f.filename === 'Soul.md');
+                if (!soulFile.content.includes('Test essence content')) {
+                    throw new Error('Soul.md content incorrect');
+                }
+                
+                const agentsFile = files.find(f => f.filename === 'Agents.md');
+                if (!agentsFile.content.includes('Manager')) {
+                    throw new Error('Agents.md hierarchy incorrect');
+                }
+                
+                log('✓ File content validation successful');
+            } catch (e) {
+                log('✗ File content validation failed: ' + e.message, true);
+            }
+
+            log('\n=== All tests completed ===');
+        }
+
+        async function testDownload() {
+            const testData = {
+                name: 'TestAgent',
+                role: 'Test Role',
+                essence: 'Test essence for download',
+                tone: 'professional',
+                mission: 'Test mission for download',
+                hierarchy: 'Manager'
+            };
+            
+            const files = generateFilePack(testData);
+            const zipBlob = await createZip(files, 'TestAgent');
+            const timestamp = new Date().toISOString().slice(0, 10);
+            
+            log('Triggering download...');
+            downloadZip(zipBlob, `test-agent-${timestamp}.zip`);
+        }
+    </script>
+</body>
+</html>

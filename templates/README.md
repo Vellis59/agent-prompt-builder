@@ -1,10 +1,10 @@
 # Starter Templates
 
-This directory stores starter template files used by the Agent Prompt Builder.
+This directory stores starter template files used by Agent Prompt Builder.
 
-Planned examples:
-- `infra-hephaistos.json`
-- `support-generalist.json`
-- `compliance-strict.json`
+Available templates:
+- `orchestrator-agent.json`
+- `developer-agent.json`
+- `telegram-news-agent.json`
 
-Add JSON template files here as Phase 2 begins.
+Each file contains a complete preset used to auto-populate the wizard form.
