@@ -1,0 +1,37 @@
+/*
+  Agent Prompt Builder - Custom styles
+  Scope: visual polish beyond Tailwind utility classes.
+*/
+
+:root {
+  --card-bg: rgba(15, 23, 42, 0.7);
+  --card-border: rgba(51, 65, 85, 0.7);
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 1rem;
+  box-shadow: 0 10px 35px rgba(2, 6, 23, 0.35);
+}
+
+.btn {
+  border: 1px solid rgb(51 65 85);
+  background: rgb(15 23 42);
+  color: rgb(226 232 240);
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.875rem;
+  transition: all 150ms ease;
+}
+
+.btn:hover {
+  border-color: rgb(71 85 105);
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: rgb(14 116 144);
+  border-color: rgb(8 145 178);
+  color: white;
+}

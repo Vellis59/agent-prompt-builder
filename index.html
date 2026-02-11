@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Agent Prompt Builder - Build OpenClaw agent configurations in a guided workflow." />
+    <title>Agent Prompt Builder</title>
+
+    <!-- TailwindCSS via CDN (project constraint) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body class="min-h-screen bg-slate-950 text-slate-100">
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur">
+      <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
+        <h1 class="text-xl font-semibold tracking-tight">Agent Prompt Builder</h1>
+        <span class="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">Phase 1 Foundation</span>
+      </div>
+    </header>
+
+    <main class="mx-auto grid w-full max-w-6xl gap-6 px-4 py-8 lg:grid-cols-[280px_1fr]">
+      <aside class="card p-4">
+        <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-300">Wizard Steps</h2>
+        <ol id="wizard-steps" class="space-y-2 text-sm text-slate-300"></ol>
+      </aside>
+
+      <section class="card p-6">
+        <h2 class="text-lg font-semibold">Workspace</h2>
+        <p class="mt-2 text-sm text-slate-300">
+          This boilerplate is ready for implementation of the wizard, template engine, and exports.
+        </p>
+
+        <div class="mt-6 flex flex-wrap gap-3">
+          <button id="btn-prev" class="btn">Previous</button>
+          <button id="btn-next" class="btn btn-primary">Next</button>
+          <button id="btn-generate" class="btn">Generate Config</button>
+          <button id="btn-export" class="btn">Export ZIP</button>
+        </div>
+
+        <pre id="output" class="mt-6 min-h-56 overflow-auto rounded-xl border border-slate-800 bg-slate-950 p-4 text-xs text-emerald-300"></pre>
+      </section>
+    </main>
+
+    <footer class="border-t border-slate-800 py-4 text-center text-xs text-slate-400">
+      Built with HTML/CSS/JS + Tailwind CDN. No backend.
+    </footer>
+
+    <script src="./js/templates.js"></script>
+    <script src="./js/storage.js"></script>
+    <script src="./js/wizard.js"></script>
+    <script src="./js/generator.js"></script>
+    <script src="./js/exporter.js"></script>
+    <script>
+      window.AgentPromptBuilder?.boot?.();
+    </script>
+  </body>
+</html>
