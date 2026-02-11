@@ -1,6 +1,6 @@
 /**
  * wizard.js
- * Wizard state machine + form binding + template loading.
+ * Wizard state machine + form binding + template loading + step-level validation controls.
  */
 
 window.AgentPromptBuilder = window.AgentPromptBuilder || {};
@@ -31,6 +31,14 @@ window.AgentPromptBuilder = window.AgentPromptBuilder || {};
     }
   };
 
+  let inputDebounce;
+
+  function getStepStatus(stepIndex) {
+    if (stepIndex > 3) return 'pending';
+    const result = ns.validation?.validateStep?.(stepIndex, state.formData);
+    return result?.valid ? 'complete' : 'error';
+  }
+
   function renderSteps() {
     const root = document.getElementById('wizard-steps');
     if (!root) return;
@@ -38,7 +46,15 @@ window.AgentPromptBuilder = window.AgentPromptBuilder || {};
     root.innerHTML = steps
       .map((step, idx) => {
         const active = idx === state.currentIndex;
-        return `<li class="rounded-md border px-3 py-2 ${active ? 'border-cyan-400 text-cyan-300' : 'border-slate-700'}">${idx + 1}. ${step.label}</li>`;
+        const status = getStepStatus(idx);
+        const statusBadge =
+          status === 'complete'
+            ? '<span class="step-badge step-ok">✓</span>'
+            : status === 'error'
+              ? '<span class="step-badge step-error">!</span>'
+              : '<span class="step-badge">•</span>';
+
+        return `<li class="rounded-md border px-3 py-2 ${active ? 'border-cyan-400 text-cyan-300' : 'border-slate-700'}"><div class="step-line"><span>${idx + 1}. ${step.label}</span>${statusBadge}</div></li>`;
       })
       .join('');
 
@@ -46,6 +62,10 @@ window.AgentPromptBuilder = window.AgentPromptBuilder || {};
       const panelStep = Number(panel.dataset.step);
       panel.classList.toggle('hidden', panelStep !== state.currentIndex);
     });
+
+    if (state.currentIndex === 4) {
+      ns.validation?.renderErrorSummary?.();
+    }
   }
 
   function setFormValues(data = {}) {
@@ -75,6 +95,22 @@ window.AgentPromptBuilder = window.AgentPromptBuilder || {};
     return state.formData;
   }
 
+  function updateStepControls() {
+    const nextBtn = document.getElementById('btn-next');
+    if (!nextBtn) return;
+
+    const isReview = state.currentIndex >= steps.length - 1;
+    nextBtn.disabled = isReview;
+
+    if (!isReview) {
+      const stepValidation = ns.validation?.validateStep?.(state.currentIndex, state.formData) || { valid: true };
+      nextBtn.disabled = !stepValidation.valid;
+    }
+
+    nextBtn.classList.toggle('opacity-60', nextBtn.disabled);
+    nextBtn.classList.toggle('cursor-not-allowed', nextBtn.disabled);
+  }
+
   async function applyTemplate(templateId) {
     if (!templateId) return;
 
@@ -96,6 +132,9 @@ window.AgentPromptBuilder = window.AgentPromptBuilder || {};
     });
 
     collectFormData();
+    ['name', 'role', 'tools'].forEach((field) => ns.validation?.updateFieldUI?.(field, state.formData[field]));
+    renderSteps();
+    updateStepControls();
     ns.refreshPreview?.();
   }
 
@@ -116,29 +155,54 @@ window.AgentPromptBuilder = window.AgentPromptBuilder || {};
     });
   }
 
+  function applyRealtimeValidation() {
+    ['name', 'role', 'tools'].forEach((field) => {
+      ns.validation?.updateFieldUI?.(field, state.formData[field]);
+    });
+
+    updateStepControls();
+    renderSteps();
+  }
+
   function bindFormEvents() {
     const form = document.getElementById('agent-form');
     if (!form) return;
 
     form.addEventListener('input', () => {
       collectFormData();
-      ns.refreshPreview?.();
+      clearTimeout(inputDebounce);
+      inputDebounce = setTimeout(() => {
+        applyRealtimeValidation();
+        ns.refreshPreview?.();
+      }, 120);
     });
 
     form.addEventListener('change', () => {
       collectFormData();
+      applyRealtimeValidation();
       ns.refreshPreview?.();
     });
   }
 
-  function next() {
-    state.currentIndex = Math.min(state.currentIndex + 1, steps.length - 1);
+  function setCurrentStep(index) {
+    const maxStep = steps.length - 1;
+    state.currentIndex = Math.max(0, Math.min(index, maxStep));
     renderSteps();
+    updateStepControls();
+  }
+
+  function next() {
+    const currentValidation = ns.validation?.validateStep?.(state.currentIndex, state.formData) || { valid: true };
+    if (!currentValidation.valid) {
+      updateStepControls();
+      return;
+    }
+
+    setCurrentStep(state.currentIndex + 1);
   }
 
   function prev() {
-    state.currentIndex = Math.max(state.currentIndex - 1, 0);
-    renderSteps();
+    setCurrentStep(state.currentIndex - 1);
   }
 
   async function init() {
@@ -152,8 +216,21 @@ window.AgentPromptBuilder = window.AgentPromptBuilder || {};
       collectFormData();
     }
 
+    applyRealtimeValidation();
     ns.refreshPreview?.();
   }
 
-  ns.wizard = { steps, state, next, prev, renderSteps, init, collectFormData, applyTemplate };
+  ns.wizard = {
+    steps,
+    state,
+    next,
+    prev,
+    setCurrentStep,
+    updateStepControls,
+    renderSteps,
+    init,
+    collectFormData,
+    setFormValues,
+    applyTemplate
+  };
 })(window.AgentPromptBuilder);

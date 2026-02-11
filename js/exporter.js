@@ -286,6 +286,7 @@ ${formData.coordinationRules || '- Manager delegates based on task complexity\n-
    */
   async function boot() {
     await ns.wizard?.init?.();
+    ns.importer?.init?.();
 
     const out = document.getElementById('output');
     const prevBtn = document.getElementById('btn-prev');
